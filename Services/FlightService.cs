@@ -4,7 +4,6 @@ using Utilities;
 namespace Services;
 
 using System.Collections;
-
 public class FlightService : IEnumerable<Flight>
 {
     private readonly ArrayList<Flight> _flights = new();
@@ -55,4 +54,5 @@ public class FlightService : IEnumerable<Flight>
             f.To.Equals(to, StringComparison.OrdinalIgnoreCase) &&
             f.Departure.Date == travelDate.Date &&
             f.SeatsAvailable >= passengerCount);
+    
 }
