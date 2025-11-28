@@ -4,9 +4,9 @@
 @using Utilities
 @using System.Linq
 @layout MainLayout
-@inject Services.TicketQueueService TicketQueueService
 @inject Services.FlightService FlightService
 @inject Services.SeatService SeatService
+@inject Services.PassengerSeatService PassengerSeatService
 
 <PageTitle>Ticket System</PageTitle>
 
@@ -16,7 +16,7 @@
             <a class="nav-link active" href="#">Home</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link disabled" aria-disabled="true">Flight</a>
+            <a class="nav-link" href="/flight" Match="NavLinkMatch.Prefix">Flight</a>
         </li>
     </ul>
 
@@ -91,8 +91,8 @@
                             </p>
 
                             <pre class="mt-2 mb-0">
-                                                                                    @System.Text.Json.JsonSerializer.Serialize(flight, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
-                                                                                                                </pre>
+                                                                @System.Text.Json.JsonSerializer.Serialize(flight, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+                                                                                            </pre>
                         </div>
 
                         <button class="btn btn-sm btn-success mt-2" @onclick="() => PickSeat(flight)">
@@ -142,26 +142,11 @@
 
                     <div class="mt-3">
                         <button class="btn btn-success me-2" @onclick="FinishSeatPicking"
-                            disabled="@(passengerSeats.Count == 0)">
+                            disabled="@(PassengerSeatService.Count == 0)">
                             Done
                         </button>
                         <button class="btn btn-secondary" @onclick="CancelPick">Cancel</button>
                     </div>
-
-                    @* @if (passengerSeats.Count > 0)
-                    {
-                        <hr />
-                        <h6>Passengers</h6>
-                        <ul class="list-group">
-                            @foreach (var p in passengerSeats)
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>@p.Name (@p.Age) · @p.Gender · Seat @p.SeatNumber</span>
-                                    <small class="text-muted">Ticket ID: <code>@p.Id</code></small>
-                                </li>
-                            }
-                        </ul>
-                    } *@
                 }
             </div>
         </div>
@@ -190,7 +175,7 @@
                             <input class="form-control" @bind="passengerGender" />
                         </div>
                         <div>
-                            <small class="text-muted">(@passengerSeats.Count / @passengers) added</small>
+                            <small class="text-muted">(@PassengerSeatService.Count / @passengers) added</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -375,14 +360,13 @@
         currentFlight = null;
     }
 
-    private ArrayList<PassengerSeat> passengerSeats = new();
     private bool showPassengerModal = false;
 
     private string passengerName = "";
     private int passengerAge = 0;
     private string passengerGender = "";
     private PassengerSeat? lastPassengerSeat =>
-    passengerSeats.Count > 0 ? passengerSeats[^1] : null;
+    PassengerSeatService.Count > 0 ? PassengerSeatService[^1] : null;
 
     private bool IsPassengerInvalid =>
     selectedSeat == null ||
@@ -423,7 +407,7 @@
             FlightId = selectedSeat.FlightId
         };
 
-        passengerSeats.AddLast(
+        PassengerSeatService.AddLast(
         passengerSeat
         );
 
@@ -439,7 +423,7 @@
         selectedSeat = null;
 
         // auto-finish if reached passenger count
-        if (passengerSeats.Count >= passengers)
+        if (PassengerSeatService.Count >= passengers)
         {
             pickingSeat = false;
         }
