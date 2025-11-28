@@ -12,22 +12,22 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<TicketQueueService>();
+builder.Services.AddSingleton<FlightService>();
 
 var host = builder.Build();
 
 try
 {
     var http = host.Services.GetRequiredService<HttpClient>();
-    var ticketService = host.Services.GetRequiredService<TicketQueueService>();
 
-    var json = await http.GetStringAsync("sample-data/tickets.json");
-    var tickets = JsonSerializer.Deserialize<List<Ticket>>(json, JsonOptions.Default);
-
-    ticketService.Initialize(tickets);
+    host.Services.GetRequiredService<TicketQueueService>().Initialize(
+        JsonSerializer.Deserialize<List<Ticket>>(await http.GetStringAsync("sample-data/tickets.json"), JsonOptions.Default));
+    host.Services.GetRequiredService<FlightService>().Initialize(
+        JsonSerializer.Deserialize<List<Flight>>(await http.GetStringAsync("sample-data/flights.json"), JsonOptions.Default));
 }
-catch
+catch (Exception ex)
 {
-
+    Console.Error.WriteLine($"Startup init failed: {ex}");
 }
 
 await host.RunAsync();

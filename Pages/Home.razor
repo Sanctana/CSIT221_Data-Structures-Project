@@ -1,47 +1,211 @@
 ﻿@page "/"
 @using Models
+@using Services
+@using Utilities
+@using System.Linq
 @layout MainLayout
 @inject Services.TicketQueueService TicketQueueService
+@inject Services.FlightService FlightService
 
 <PageTitle>Ticket System</PageTitle>
 
-<h3>Welcome to the Ticket System</h3>
+<div class="container mt-3">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" aria-disabled="true">Flight</a>
+        </li>
+    </ul>
 
-@foreach (var ticket in TicketQueueService.GetAll())
-{
-    <div class="card mb-2">
+    <div class="card mb-4">
+        <div class="card-header fw-bold">Fly with us!</div>
         <div class="card-body">
-            <h5 class="card-title">Ticket ID: @ticket.Id</h5>
-            <p class="card-text">Holder Name: @ticket.HolderName</p>
-            <p class="card-text">Issue Time: @ticket.IssueTime.ToString("g")</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">From</label>
+                    <input class="form-control" @bind="from" @bind:event="oninput" list="fromSuggestions"
+                        placeholder="Origin" />
+                    <datalist id="fromSuggestions">
+                        @foreach (string s in suggestions)
+                        {
+                            <option value="@s"></option>
+                        }
+                    </datalist>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">To</label>
+                    <input class="form-control" @bind="to" @bind:event="oninput" list="toSuggestions"
+                        placeholder="Destination" />
+                    <datalist id="toSuggestions">
+                        @foreach (string s in suggestions)
+                        {
+                            <option value="@s"></option>
+                        }
+                    </datalist>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Date</label>
+                    <input id="travelDatePicker" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Passengers</label>
+                    <input type="number" min="1" class="form-control" @bind="passengers" />
+                </div>
+            </div>
+
+            <div class="mt-3 text-end">
+                <button class="btn btn-primary" @onclick="SearchFlights" disabled="@IsSearchDisabled">
+                    Search Flights
+                </button>
+            </div>
         </div>
     </div>
-}
 
-<button @onclick="ShowAddTicketModal">Show modal</button>
+    <!-- Search results -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">Search Results</div>
+        <div class="card-body">
+            @if (flights == null || flights.Count == 0)
+            {
+                <p class="text-muted">No flights found.</p>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var flight in flights)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@flight.From &rarr; @flight.To</h5>
+                                <small>@flight.Departure.ToString("yyyy-MM-dd HH:mm")</small>
+                            </div>
 
-@if (showModal)
-{
-    
-}
+                            <p class="mb-1 text-muted">
+                                @($"{flight.Airline} · {flight.FlightNumber} · {flight.DurationMinutes} min · Seats:                        {flight.SeatsAvailable} · {flight.Price:C}")
+                            </p>
+
+                            <pre class="mt-2 mb-0">
+        @System.Text.Json.JsonSerializer.Serialize(flight, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+                                    </pre>
+                        </div>
+
+                        @* <button class="btn btn-sm btn-success mt-2" @onclick="">
+                            Book @passengers Ticket(s) *@
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
-    private bool showModal = false;
-    protected override void OnInitialized()
+    private string _from = "";
+    private string _to = "";
+    private int passengers = 1;
+
+    private string to
     {
-        TicketQueueService.Enqueue(new Ticket { Id = 1, HolderName = "Alice", IssueTime = DateTime.Now });
-        TicketQueueService.Enqueue(new Ticket { Id = 2, HolderName = "Bob", IssueTime = DateTime.Now });
-        TicketQueueService.Enqueue(new Ticket { Id = 3, HolderName = "Charlie", IssueTime = DateTime.Now });
+        get => _to;
+        set
+        {
+            _to = value;
+            UpdateToSuggestions();
+            _datePickerNeedsInit = true;
+        }
     }
 
-
-    public void ShowAddTicketModal()
+    private string from
     {
-        showModal = true;
+        get => _from;
+        set
+        {
+            _from = value;
+            UpdateFromSuggestions();
+            _datePickerNeedsInit = true;
+        }
     }
 
-    public void HideAddTicketModal()
+    private ArrayList<string> suggestions = new();
+    private DateTime travelDate = DateTime.Today;
+    private bool _datePickerNeedsInit = true;
+    private ArrayList<Flight> flights = new();
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        showModal = false;
+        if (!firstRender && !_datePickerNeedsInit) return;
+
+        string[] availableDates = FlightService
+        .Where(f =>
+        (string.IsNullOrWhiteSpace(_from) || f.From.Equals(_from, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrWhiteSpace(_to) || f.To.Equals(_to, StringComparison.OrdinalIgnoreCase))
+        )
+        .Select(f => f.Departure.Date)
+        .Distinct()
+        .Select(d => d.ToString("yyyy-MM-dd"))
+        .ToArray();
+
+        await JS.InvokeVoidAsync("datePicker.init",
+        "travelDatePicker",
+        availableDates,
+        DotNetObjectReference.Create(this));
+
+        _datePickerNeedsInit = false;
+    }
+
+    [JSInvokable]
+    public void SetTravelDate(string isoDate)
+    {
+        if (DateTime.TryParse(isoDate, out DateTime dt))
+        {
+            travelDate = dt;
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateToSuggestions()
+    {
+        suggestions.Clear();
+        if (string.IsNullOrWhiteSpace(_to)) return;
+
+        foreach (string s in FlightService.SuggestTo(_from, _to).Take(10))
+        {
+            suggestions.AddLast(s);
+        }
+    }
+
+    private void UpdateFromSuggestions()
+    {
+        suggestions.Clear();
+        if (string.IsNullOrWhiteSpace(_from)) return;
+
+        foreach (string s in FlightService.SuggestFrom(_from).Take(10))
+        {
+            suggestions.AddLast(s);
+        }
+    }
+
+    private bool IsSearchDisabled =>
+    string.IsNullOrWhiteSpace(_from) ||
+    string.IsNullOrWhiteSpace(_to) ||
+    passengers < 1;
+
+    private void SearchFlights()
+    {
+        foreach (Flight flight in FlightService.SearchFlights(_from, _to, travelDate, passengers))
+        {
+            flights.AddLast(flight);
+        }
+    }
+
+    private void PickSeat(Flight flight)
+    {
+
     }
 }
