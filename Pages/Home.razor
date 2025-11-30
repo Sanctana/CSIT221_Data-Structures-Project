@@ -20,7 +20,7 @@
 
     <li class="nav-item" role="presentation">
         <button class="nav-link @(activeTab == "home" ? "active" : "")"
-                @onclick="() => SwitchTab("home")"
+                @onclick='() => SwitchTab("home")'
                 type="button">
             Home
         </button>
@@ -28,14 +28,13 @@
 
     <li class="nav-item" role="presentation">
         <button class="nav-link @(activeTab == "flight" ? "active" : "")"
-                @onclick="() => SwitchTab("flight")"
+                @onclick='() => SwitchTab("flight")'
                 type="button">
             Reservation
         </button>
     </li>
 
 </ul>
-
 
     <!-- HOME TAB -->
     @if (activeTab == "home")
@@ -695,6 +694,7 @@
         isError = false;
     }
 }
+
 
 
 
