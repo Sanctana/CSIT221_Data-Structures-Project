@@ -1,14 +1,16 @@
-namespace Models;
-
-public class Airport
+namespace Models
 {
-    public required string Code { get; set; }      
-    public required string Name { get; set; }      
-    public required string Country { get; set; }   
-    public required string City { get; set; }     
-
-    public override string ToString()
+    public class Airport
     {
-        return $"{City} ({Code}) - {Name}";
+        public string Code { get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
+
+        public Airport(string code, string city, string country)
+        {
+            Code = code;
+            City = city;
+            Country = country;
+        }
     }
 }
