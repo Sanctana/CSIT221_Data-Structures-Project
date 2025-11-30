@@ -18,7 +18,7 @@
     <!-- Tabs -->
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == "home" ? "active" : "")"
+            <button class="nav-link @(activeTab == 'home' ? "active" : "")"
                     @onclick="() => SwitchTab('home')"
                     type="button">
                 Home
@@ -26,7 +26,7 @@
         </li>
 
         <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == "flight" ? "active" : "")"
+            <button class="nav-link @(activeTab == 'flight' ? "active" : "")"
                     @onclick="() => SwitchTab('flight')"
                     type="button">
                 Reservation
@@ -692,4 +692,5 @@
         isError = false;
     }
 }
+
 
