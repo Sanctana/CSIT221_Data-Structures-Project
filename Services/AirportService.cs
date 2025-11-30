@@ -1,39 +1,24 @@
+using System.Collections.Generic;
 using Models;
-using Utilities;
-using System.Text.Json;
 
-namespace Services;
-
-public class AirportService : IEnumerable<Airport>
+namespace Services
 {
-    private readonly ArrayList<Airport> _airports = new();
-
-    public void Initialize(List<Airport>? list)
+    public class AirportService
     {
-        if (list == null) return;
-        foreach (var a in list)
+        private readonly List<Airport> _airports = new()
         {
-            _airports.AddLast(a);
-        }
+            new Airport("LAX", "Los Angeles", "USA"),
+            new Airport("JFK", "New York", "USA"),
+            new Airport("SFO", "San Francisco", "USA"),
+            new Airport("ORD", "Chicago", "USA"),
+            new Airport("MNL", "Manila", "Philippines"),
+            new Airport("CEB", "Cebu", "Philippines"),
+            new Airport("DXB", "Dubai", "UAE"),
+            new Airport("NRT", "Tokyo Narita", "Japan"),
+            new Airport("HND", "Tokyo Haneda", "Japan"),
+            new Airport("ICN", "Seoul Incheon", "South Korea")
+        };
+
+        public IEnumerable<Airport> GetAllAirports() => _airports;
     }
-
-    public IEnumerable<Airport> Search(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) 
-            return _airports;
-
-        input = input.ToLower();
-
-        return _airports.Where(a =>
-            a.Code.ToLower().Contains(input) ||
-            a.City.ToLower().Contains(input) ||
-            a.Name.ToLower().Contains(input)
-        );
-    }
-
-    public Airport? GetByCode(string code) =>
-        _airports.FirstOrDefault(a => a.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
-
-    public IEnumerator<Airport> GetEnumerator() => _airports.GetEnumerator();
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
