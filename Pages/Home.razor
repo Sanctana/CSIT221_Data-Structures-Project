@@ -16,23 +16,26 @@
 <div class="container mt-3">
 
     <!-- Tabs -->
-    <ul class="nav nav-tabs mb-3" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == 'home' ? "active" : "")"
-                    @onclick="() => SwitchTab('home')"
-                    type="button">
-                Home
-            </button>
-        </li>
+<ul class="nav nav-tabs mb-3" role="tablist">
 
-        <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == 'flight' ? "active" : "")"
-                    @onclick="() => SwitchTab('flight')"
-                    type="button">
-                Reservation
-            </button>
-        </li>
-    </ul>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "home" ? "active" : "")"
+                @onclick="() => SwitchTab("home")"
+                type="button">
+            Home
+        </button>
+    </li>
+
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "flight" ? "active" : "")"
+                @onclick="() => SwitchTab("flight")"
+                type="button">
+            Reservation
+        </button>
+    </li>
+
+</ul>
+
 
     <!-- HOME TAB -->
     @if (activeTab == "home")
@@ -692,5 +695,6 @@
         isError = false;
     }
 }
+
 
 
