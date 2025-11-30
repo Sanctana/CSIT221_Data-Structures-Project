@@ -7,8 +7,26 @@
 
 <h3>Welcome to the Ticket System</h3>
 
-@code {
+@foreach (var ticket in TicketQueueService.GetAll())
+{
+    <div class="card mb-2">
+        <div class="card-body">
+            <h5 class="card-title">Ticket ID: @ticket.Id</h5>
+            <p class="card-text">Holder Name: @ticket.HolderName</p>
+            <p class="card-text">Issue Time: @ticket.IssueTime.ToString("g")</p>
+        </div>
+    </div>
+}
 
+<button @onclick="ShowAddTicketModal">Show modal</button>
+
+@if (showModal)
+{
+    
+}
+
+@code {
+    private bool showModal = false;
     protected override void OnInitialized()
     {
         TicketQueueService.Enqueue(new Ticket { Id = 1, HolderName = "Alice", IssueTime = DateTime.Now });
@@ -16,4 +34,14 @@
         TicketQueueService.Enqueue(new Ticket { Id = 3, HolderName = "Charlie", IssueTime = DateTime.Now });
     }
 
+
+    public void ShowAddTicketModal()
+    {
+        showModal = true;
+    }
+
+    public void HideAddTicketModal()
+    {
+        showModal = false;
+    }
 }
