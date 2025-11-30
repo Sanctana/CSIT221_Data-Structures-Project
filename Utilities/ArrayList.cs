@@ -68,4 +68,22 @@ public class ArrayList<T> : IEnumerable<T>
     }
 
     public int Count => _count;
+
+    public int RemoveAll(Predicate<T> match)
+    {
+        int removedCount = 0;
+        for (int i = 0; i < _count;)
+        {
+            if (match(_items[i]))
+            {
+                RemoveAt(i);
+                removedCount++;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        return removedCount;
+    }
 }

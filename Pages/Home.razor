@@ -6,6 +6,7 @@
 @layout MainLayout
 @inject Services.TicketQueueService TicketQueueService
 @inject Services.FlightService FlightService
+@inject Services.SeatService SeatService
 
 <PageTitle>Ticket System</PageTitle>
 
@@ -77,7 +78,7 @@
             else
             {
                 <div class="list-group">
-                    @foreach (var flight in flights)
+                    @foreach (Flight flight in flights)
                     {
                         <div class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
@@ -86,28 +87,158 @@
                             </div>
 
                             <p class="mb-1 text-muted">
-                                @($"{flight.Airline} · {flight.FlightNumber} · {flight.DurationMinutes} min · Seats:                        {flight.SeatsAvailable} · {flight.Price:C}")
+                                @($"{flight.Airline} · {flight.FlightNumber} · {flight.DurationMinutes} min ·                        Seats:{flight.SeatsAvailable} · {flight.Price:C}")
                             </p>
 
                             <pre class="mt-2 mb-0">
-        @System.Text.Json.JsonSerializer.Serialize(flight, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
-                                    </pre>
+                                                                                    @System.Text.Json.JsonSerializer.Serialize(flight, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+                                                                                                                </pre>
                         </div>
 
-                        @* <button class="btn btn-sm btn-success mt-2" @onclick="">
-                            Book @passengers Ticket(s) *@
+                        <button class="btn btn-sm btn-success mt-2" @onclick="() => PickSeat(flight)">
+                            Pick Seat
+                        </button>
                     }
                 </div>
             }
         </div>
     </div>
+
+    <!-- Seat picker -->
+    @if (pickingSeat && currentFlight != null)
+    {
+        <div class="card mb-4 border-primary">
+            <div class="card-header fw-bold">Pick a seat — @currentFlight.Airline @currentFlight.FlightNumber
+                (@currentFlight.From → @currentFlight.To)</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Selected:</strong> @(selectedSeat?.SeatNumber ?? "none")
+                </div>
+
+                @if (seatOptions == null || seatOptions.Count == 0)
+                {
+                    <p class="text-muted">No seat data available.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-column">
+                        @foreach (IGrouping<int, Seat> row in seatRows)
+                        {
+                            <div class="d-flex mb-2">
+                                <div class="me-3 align-self-center" style="width:3rem">@row.Key</div>
+                                <div class="d-flex flex-wrap">
+                                    @foreach (Seat seat in row)
+                                    {
+                                        var isSelected = selectedSeat != null && selectedSeat.SeatNumber == seat.SeatNumber;
+                                        <button class="btn btn-sm me-2 mb-2 @(isSelected ? "btn-primary" : "btn-outline-secondary")"
+                                            @onclick="() => OnSeatClicked(seat)">
+                                            @seat.SeatNumber
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-success me-2" @onclick="FinishSeatPicking"
+                            disabled="@(passengerSeats.Count == 0)">
+                            Done
+                        </button>
+                        <button class="btn btn-secondary" @onclick="CancelPick">Cancel</button>
+                    </div>
+
+                    @* @if (passengerSeats.Count > 0)
+                    {
+                        <hr />
+                        <h6>Passengers</h6>
+                        <ul class="list-group">
+                            @foreach (var p in passengerSeats)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>@p.Name (@p.Age) · @p.Gender · Seat @p.SeatNumber</span>
+                                    <small class="text-muted">Ticket ID: <code>@p.Id</code></small>
+                                </li>
+                            }
+                        </ul>
+                    } *@
+                }
+            </div>
+        </div>
+    }
+
+    @if (showPassengerModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 1060;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Passenger's Info — Seat @selectedSeat?.SeatNumber</h5>
+                        <button type="button" class="btn-close" @onclick="ClosePassengerModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" @bind="passengerName" autofocus />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" min="0" class="form-control" @bind="passengerAge" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Gender</label>
+                            <input class="form-control" @bind="passengerGender" />
+                        </div>
+                        <div>
+                            <small class="text-muted">(@passengerSeats.Count / @passengers) added</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="ClosePassengerModal">Cancel</button>
+                        <button class="btn btn-primary" @onclick="ConfirmPassenger"
+                            disabled="@IsPassengerInvalid">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    }
+
+    @if (showTicketDetails)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 1060;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ticket Created</h5>
+                        <button type="button" class="btn-close" @onclick="CloseTicketDetails"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Your ticket ID is <code>@lastPassengerSeat?.Id</code>. Use this to search the ticket's details.
+                        </p>
+                        <small class="text-muted">Store this ID safely.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" @onclick="CloseTicketDetails">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    }
+
 </div>
 
 @code {
     private string _from = "";
     private string _to = "";
     private int passengers = 1;
-
+    private bool pickingSeat = false;
+    private Flight? currentFlight = null;
+    private ArrayList<Seat> seatOptions = new();
+    private Seat? selectedSeat = null;
+    private bool showTicketDetails = false;
+    private ILookup<int, Seat> seatRows = null!; // grouped by numeric row
     private string to
     {
         get => _to;
@@ -206,6 +337,128 @@
 
     private void PickSeat(Flight flight)
     {
+        currentFlight = flight;
 
+        IEnumerable<Seat> _seatOptions = SeatService.GetSeatsByFlightId(flight.Id);
+        foreach (Seat seat in _seatOptions)
+        {
+            seatOptions.AddLast(seat);
+        }
+        selectedSeat = null;
+        BuildSeatRows();
+        pickingSeat = true;
+    }
+
+    private void BuildSeatRows()
+    {
+        // group seats by numeric row (e.g. "12A" -> 12) for display order
+        seatRows = seatOptions
+        .Select(s => new { Seat = s, Row = ParseRowNumber(s.SeatNumber) })
+        .Where(x => x.Row.HasValue)
+        .OrderBy(x => x.Row!.Value)
+        .ThenBy(x => x.Seat.SeatNumber)
+        .ToLookup(x => x.Row!.Value, x => x.Seat);
+    }
+
+    private int? ParseRowNumber(string seatNumber)
+    {
+        if (string.IsNullOrWhiteSpace(seatNumber)) return null;
+        var digits = new string(seatNumber.TakeWhile(char.IsDigit).ToArray());
+        if (int.TryParse(digits, out int r)) return r;
+        return null;
+    }
+
+    private void CancelPick()
+    {
+        pickingSeat = false;
+        selectedSeat = null;
+        currentFlight = null;
+    }
+
+    private ArrayList<PassengerSeat> passengerSeats = new();
+    private bool showPassengerModal = false;
+
+    private string passengerName = "";
+    private int passengerAge = 0;
+    private string passengerGender = "";
+    private PassengerSeat? lastPassengerSeat =>
+    passengerSeats.Count > 0 ? passengerSeats[^1] : null;
+
+    private bool IsPassengerInvalid =>
+    selectedSeat == null ||
+    string.IsNullOrWhiteSpace(passengerName) ||
+    string.IsNullOrWhiteSpace(passengerGender);
+
+    private void OnSeatClicked(Seat seat)
+    {
+        selectedSeat = seat;
+        ResetPassengerForm();
+        showPassengerModal = true;
+    }
+
+    private void ResetPassengerForm()
+    {
+        passengerName = "";
+        passengerAge = 0;
+        passengerGender = "";
+    }
+
+    private void ClosePassengerModal()
+    {
+        showPassengerModal = false;
+        selectedSeat = null;
+    }
+
+    private void ConfirmPassenger()
+    {
+
+        if (currentFlight == null || selectedSeat == null) return;
+
+        PassengerSeat passengerSeat = new PassengerSeat
+        {
+            Name = passengerName.Trim(),
+            Age = passengerAge,
+            Gender = passengerGender.Trim(),
+            SeatNumber = selectedSeat.SeatNumber,
+            FlightId = selectedSeat.FlightId
+        };
+
+        passengerSeats.AddLast(
+        passengerSeat
+        );
+
+        // update availability
+        if (currentFlight.SeatsAvailable > 0)
+            currentFlight.SeatsAvailable--;
+
+        seatOptions.RemoveAll(s => s.SeatNumber == selectedSeat.SeatNumber && s.FlightId == selectedSeat.FlightId);
+        SeatService.UpdateSeatAvailability(selectedSeat.FlightId, selectedSeat.SeatNumber, false);
+        BuildSeatRows();
+
+        showPassengerModal = false;
+        selectedSeat = null;
+
+        // auto-finish if reached passenger count
+        if (passengerSeats.Count >= passengers)
+        {
+            pickingSeat = false;
+        }
+
+        showTicketDetails = true;
+
+
+
+        StateHasChanged();
+    }
+
+    private void FinishSeatPicking()
+    {
+        pickingSeat = false;
+        selectedSeat = null;
+    }
+
+    private void CloseTicketDetails()
+    {
+        showTicketDetails = false;
     }
 }
