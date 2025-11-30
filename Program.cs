@@ -14,9 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddSingleton<FlightService>();
 builder.Services.AddSingleton<SeatService>();
 builder.Services.AddSingleton<PassengerSeatService>();
-builder.Services.AddSingleton<FlightService>();
-builder.Services.AddSingleton<SeatService>();
-builder.Services.AddSingleton<PassengerSeatService>();
+builder.Services.AddSingleton<AirportService>();
 builder.Services.AddSingleton<TicketService>(); 
 
 
@@ -30,6 +28,9 @@ try
         JsonSerializer.Deserialize<List<Flight>>(await http.GetStringAsync("sample-data/flights.json"), JsonOptions.Default));
     host.Services.GetRequiredService<SeatService>().Initialize(
         JsonSerializer.Deserialize<List<Seat>>(await http.GetStringAsync("sample-data/seats.json"), JsonOptions.Default));
+    host.Services.GetRequiredService<AirportService>().Initialize(
+    JsonSerializer.Deserialize<List<Airport>>(await http.GetStringAsync("sample-data/airports.json"), JsonOptions.Default));
+
 
 }
 catch (Exception ex)
@@ -39,3 +40,4 @@ catch (Exception ex)
 
 
 await host.RunAsync();
+
