@@ -28,4 +28,4 @@ public class TicketService : IEnumerable<Ticket>
     public IEnumerator<Ticket> GetEnumerator() => _tickets.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => _tickets.GetEnumerator();
 }
-v
+
