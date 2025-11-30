@@ -509,46 +509,57 @@
     }
 
     private void ConfirmPassenger()
+{
+    if (currentFlight == null || selectedSeat == null) return;
+
+    // 1) Create and store passenger seat
+    PassengerSeat passengerSeat = new PassengerSeat
     {
+        Name = passengerName.Trim(),
+        Age = passengerAge,
+        Gender = passengerGender.Trim(),
+        SeatNumber = selectedSeat.SeatNumber,
+        FlightId = selectedSeat.FlightId
+    };
 
-        if (currentFlight == null || selectedSeat == null) return;
+    PassengerSeatService.AddLast(passengerSeat);
 
-        PassengerSeat passengerSeat = new PassengerSeat
-        {
-            Name = passengerName.Trim(),
-            Age = passengerAge,
-            Gender = passengerGender.Trim(),
-            SeatNumber = selectedSeat.SeatNumber,
-            FlightId = selectedSeat.FlightId
-        };
+    Ticket ticket = new Ticket
+    {
+        Id = passengerSeat.Id,                 // 🔹 reuse the generated GUID
+        FlightId = currentFlight.Id,
+        SeatId = passengerSeat.SeatNumber,
+        From = currentFlight.From,
+        To = currentFlight.To,
+        HolderName = passengerSeat.Name,
+        IssueTime = DateTime.Now,
+        TravelTime = currentFlight.Departure,
+        PassengerCount = 1
+    };
 
-        PassengerSeatService.AddLast(
-        passengerSeat
-        );
+    TicketService.AddTicket(ticket);
 
-        // update availability
-        if (currentFlight.SeatsAvailable > 0)
-            currentFlight.SeatsAvailable--;
+    //Update availability & seats
+    if (currentFlight.SeatsAvailable > 0)
+        currentFlight.SeatsAvailable--;
 
-        seatOptions.RemoveAll(s => s.SeatNumber == selectedSeat.SeatNumber && s.FlightId == selectedSeat.FlightId);
-        SeatService.UpdateSeatAvailability(selectedSeat.FlightId, selectedSeat.SeatNumber, false);
-        BuildSeatRows();
+    seatOptions.RemoveAll(s => s.SeatNumber == selectedSeat.SeatNumber && s.FlightId == selectedSeat.FlightId);
+    SeatService.UpdateSeatAvailability(selectedSeat.FlightId, selectedSeat.SeatNumber, false);
+    BuildSeatRows();
 
-        showPassengerModal = false;
-        selectedSeat = null;
+    showPassengerModal = false;
+    selectedSeat = null;
 
-        // auto-finish if reached passenger count
-        if (PassengerSeatService.Count >= passengers)
-        {
-            pickingSeat = false;
-        }
-
-        showTicketDetails = true;
-
-
-
-        StateHasChanged();
+    // auto-finish if reached passenger count
+    if (PassengerSeatService.Count >= passengers)
+    {
+        pickingSeat = false;
     }
+
+    showTicketDetails = true;
+
+    StateHasChanged();
+}
 
     private void FinishSeatPicking()
     {
@@ -709,3 +720,4 @@
     }
 
 }
+
