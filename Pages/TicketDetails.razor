@@ -1,0 +1,124 @@
+@page "/ticket/{Id}"
+@using Models
+@using Services
+@using Microsoft.AspNetCore.Components
+@inject TicketService TicketService
+@inject FlightService FlightService
+@inject NavigationManager Navigation
+
+<PageTitle>Ticket Details</PageTitle>
+
+<div class="container mt-3">
+    <button class="btn btn-secondary mb-3" @onclick="GoBack">← Back to Tickets</button>
+
+    @if (_notFound)
+    {
+        <div class="alert alert-danger">
+            Ticket not found.
+        </div>
+    }
+    else if (_ticket is null)
+    {
+        <p class="text-muted">Loading ticket...</p>
+    }
+    else
+    {
+        <div class="boarding-pass boarding-pass-large">
+            <div class="bp-top">
+                <div class="bp-route">
+                    <span class="bp-airport">@_ticket.From</span>
+                    <span class="bp-arrow">➜</span>
+                    <span class="bp-airport">@_ticket.To</span>
+                </div>
+                <div class="bp-airline">
+                    @if (_flight is not null)
+                    {
+                        <span>@_flight.Airline</span>
+                        <span class="bp-flight-number">@_flight.FlightNumber</span>
+                    }
+                </div>
+            </div>
+
+            <div class="bp-middle">
+                <div>
+                    <div class="bp-label">Passenger</div>
+                    <div class="bp-value">@_ticket.HolderName</div>
+                </div>
+                <div>
+                    <div class="bp-label">Seat</div>
+                    <div class="bp-value">@_ticket.SeatId</div>
+                </div>
+                <div>
+                    <div class="bp-label">Ticket ID</div>
+                    <div class="bp-value bp-id">@_ticket.Id</div>
+                </div>
+            </div>
+
+            <div class="bp-bottom">
+                <div>
+                    <div class="bp-label">Departure</div>
+                    <div class="bp-value">
+                        @(_flight is not null ? _flight.Departure.ToString("f") : _ticket.TravelTime.ToString("f"))
+                    </div>
+                </div>
+                <div>
+                    <div class="bp-label">Arrival</div>
+                    <div class="bp-value">
+                        @(_flight is not null ? _flight.Arrival.ToString("f") : "")
+                    </div>
+                </div>
+                <div>
+                    <div class="bp-label">Issued</div>
+                    <div class="bp-value">@_ticket.IssueTime.ToString("g")</div>
+                </div>
+            </div>
+
+            <div class="bp-footer">
+                <div class="bp-barcode-placeholder">
+                    ▓▓▓ ▓▓ ▓▓▓ ▓▓ ▓▓▓ ▓▓
+                </div>
+                <div class="bp-note text-muted">
+                    Please arrive at the gate at least 45 minutes before departure. Bring a valid ID matching the passenger name.
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+
+    private Ticket? _ticket;
+    private Flight? _flight;
+    private bool _notFound;
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(Id))
+        {
+            _notFound = true;
+            return;
+        }
+
+        _ticket = TicketService.GetById(Id);
+        if (_ticket is null)
+        {
+            _notFound = true;
+            return;
+        }
+
+        try
+        {
+            _flight = FlightService.GetFlightById(_ticket.FlightId);
+        }
+        catch
+        {
+            _flight = null;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/tickets");
+    }
+}
