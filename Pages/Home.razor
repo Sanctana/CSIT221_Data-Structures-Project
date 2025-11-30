@@ -19,14 +19,18 @@
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link @(activeTab == "home" ? "active" : "")"
-                    @onclick="() => SwitchTab("home")"
-                    type="button">Home</button>
+                    @onclick="() => SwitchTab('home')"
+                    type="button">
+                Home
+            </button>
         </li>
 
         <li class="nav-item" role="presentation">
             <button class="nav-link @(activeTab == "flight" ? "active" : "")"
-                    @onclick="() => SwitchTab("flight")"
-                    type="button">Reservation</button>
+                    @onclick="() => SwitchTab('flight')"
+                    type="button">
+                Reservation
+            </button>
         </li>
     </ul>
 
@@ -47,6 +51,7 @@
                                @bind:event="oninput"
                                list="airportFromList"
                                placeholder="Type city, airport, or code" />
+
 
                         <datalist id="airportFromList">
                             @foreach (var a in airportSuggestionsFrom)
@@ -687,3 +692,4 @@
         isError = false;
     }
 }
+
