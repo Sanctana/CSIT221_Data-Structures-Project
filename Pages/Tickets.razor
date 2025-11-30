@@ -1,0 +1,94 @@
+@page "/tickets"
+@using Models
+@using Services
+@inject TicketService TicketService
+@inject FlightService FlightService
+@inject NavigationManager Navigation
+
+<PageTitle>Tickets</PageTitle>
+
+<div class="container mt-3">
+    <div class="card mb-3">
+        <div class="card-header fw-bold">Your Tickets</div>
+        <div class="card-body">
+            @if (_tickets.Count == 0)
+            {
+                <p class="text-muted mb-0">No tickets have been created yet. Book a flight first.</p>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var t in _tickets)
+                    {
+                        Flight? flight = null;
+                        try
+                        {
+                            flight = FlightService.GetFlightById(t.FlightId);
+                        }
+                        catch
+                        {
+                            flight = null;
+                        }
+
+                        <div class="col-md-6">
+                            <div class="boarding-pass" @onclick="() => OpenTicket(t.Id)">
+                                <div class="bp-top">
+                                    <div class="bp-route">
+                                        <span class="bp-airport">@t.From</span>
+                                        <span class="bp-arrow">➜</span>
+                                        <span class="bp-airport">@t.To</span>
+                                    </div>
+                                    <div class="bp-airline">
+                                        @if (flight is not null)
+                                        {
+                                            <span>@flight.Airline</span>
+                                            <span class="bp-flight-number">@flight.FlightNumber</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="bp-middle">
+                                    <div>
+                                        <div class="bp-label">Passenger</div>
+                                        <div class="bp-value">@t.HolderName</div>
+                                    </div>
+                                    <div>
+                                        <div class="bp-label">Seat</div>
+                                        <div class="bp-value">@t.SeatId</div>
+                                    </div>
+                                </div>
+
+                                <div class="bp-bottom">
+                                    <div>
+                                        <div class="bp-label">Departure</div>
+                                        <div class="bp-value">
+                                            @((flight ?? null) is null ? t.TravelTime.ToString("g") : flight!.Departure.ToString("g"))
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="bp-label">Ticket ID</div>
+                                        <div class="bp-value bp-id">@t.Id</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Ticket> _tickets = new();
+
+    protected override void OnInitialized()
+    {
+        _tickets = TicketService.ToList();
+    }
+
+    private void OpenTicket(string id)
+    {
+        Navigation.NavigateTo($"/ticket/{Uri.EscapeDataString(id)}");
+    }
+}
