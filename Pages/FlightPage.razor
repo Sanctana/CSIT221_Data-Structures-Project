@@ -1,0 +1,225 @@
+@page "/flight"
+@using Services
+@using Models
+@inject PassengerSeatService PassengerService
+@inject FlightService FlightService
+
+<h3>Reservation</h3>
+
+<div style="border:1px solid #ccc; padding:1rem; max-width:600px;">
+    <label>Enter ID/confirmation:</label>
+    <input class="form-control" @bind="searchId" placeholder="Passenger Id or Seat Number" />
+    <button class="btn btn-primary" @onclick="OnEnter">Enter</button>
+    <button class="btn btn-danger" style="margin-left:.5rem" @onclick="OnCancel"
+        disabled="@(!canCancel)">Cancel</button>
+
+    @if (message is not null)
+    {
+        <p style="margin-top:.5rem; color:@(isError ? "crimson" : "green")">@message</p>
+    }
+
+    @if (selected is not null)
+    {
+        <div style="margin-top:1rem;">
+            <h4>Info</h4>
+
+            @if (!editMode)
+            {
+                <ul>
+                    <li><b>Name:</b> @selected.Name</li>
+                    <li><b>Route:</b> Flight @selected.FlightId</li>
+                    <li><b>Seat:</b> @selected.SeatNumber</li>
+                    @if (flight is not null)
+                    {
+                        <li><b>Airline:</b> @flight.Airline</li>
+                        <li><b>Flight #:</b> @flight.FlightNumber</li>
+                        <li><b>Departure:</b> @flight.Departure.ToString("g")</li>
+                        <li><b>Arrival:</b> @flight.Arrival.ToString("g")</li>
+                        <li><b>Price:</b> @flight.Price.ToString("C")</li>
+                        <li><b>Seats available:</b> @flight.SeatsAvailable</li>
+                    }
+                </ul>
+
+                <button class="btn btn-secondary" @onclick="BeginEdit">Edit</button>
+            }
+            else
+            {
+                <div>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input class="form-control" @bind="editName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Seat</label>
+                        <input class="form-control" @bind="editSeatNumber" />
+                    </div>
+                    <button class="btn btn-success" @onclick="SaveEdit">Save</button>
+                    <button class="btn btn-secondary" style="margin-left:.5rem" @onclick="CancelEdit">Cancel</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string? searchId;
+    private PassengerSeat? selected;
+    private Flight? flight; // added: flight details
+    private bool canCancel;
+    private string? message;
+    private bool isError;
+
+    // Editing state
+    private bool editMode;
+    private string? editName;
+    private string? editSeatNumber;
+
+    private void OnEnter()
+    {
+        message = null; isError = false;
+        selected = null;
+        flight = null; // reset flight
+        canCancel = false;
+        editMode = false;
+
+        if (string.IsNullOrWhiteSpace(searchId))
+        {
+            isError = true;
+            message = "Please enter an ID or seat number.";
+            return;
+        }
+
+        // Find by Id or SeatNumber using LINQ over the service (service implements IEnumerable)
+        selected = PassengerService.FirstOrDefault(ps =>
+            ps.Id.Equals(searchId, StringComparison.OrdinalIgnoreCase) ||
+            ps.SeatNumber.Equals(searchId, StringComparison.OrdinalIgnoreCase));
+
+        if (selected is null)
+        {
+            isError = true;
+            message = "Reservation not found.";
+        }
+        else
+        {
+            // load flight details
+            try
+            {
+                flight = FlightService.GetFlightById(selected.FlightId);
+            }
+            catch
+            {
+                flight = null;
+            }
+
+            message = "Reservation loaded.";
+            canCancel = true;
+        }
+    }
+
+    private void OnCancel()
+    {
+        if (selected is null)
+        {
+            isError = true;
+            message = "No reservation selected.";
+            return;
+        }
+
+        var tuple = PassengerService
+            .Select((ps, i) => (ps, i))
+            .FirstOrDefault(t => t.ps.Id == selected.Id);
+
+        var index = tuple == default ? -1 : tuple.i;
+
+        if (index >= 0)
+        {
+            PassengerService.RemoveAt(index);
+            message = "Cancelled the flight.";
+            isError = false;
+            canCancel = false;
+            selected = null;
+            flight = null; // clear flight on cancel
+        }
+        else
+        {
+            isError = true;
+            message = "Failed to cancel.";
+        }
+    }
+
+    // --- Editing helpers ---
+    private void BeginEdit()
+    {
+        if (selected is null) return;
+        editMode = true;
+        editName = selected.Name;
+        editSeatNumber = selected.SeatNumber;
+        message = null;
+    }
+
+    private void CancelEdit()
+    {
+        editMode = false;
+        editName = null;
+        editSeatNumber = null;
+        message = null;
+    }
+
+    private void SaveEdit()
+    {
+        if (selected is null)
+        {
+            isError = true;
+            message = "No reservation selected.";
+            return;
+        }
+
+        // basic validation
+        if (string.IsNullOrWhiteSpace(editName) || string.IsNullOrWhiteSpace(editSeatNumber))
+        {
+            isError = true;
+            message = "Name and Seat cannot be empty.";
+            return;
+        }
+
+        // find index in service
+        var tuple = PassengerService
+            .Select((ps, i) => (ps, i))
+            .FirstOrDefault(t => t.ps.Id == selected.Id);
+
+        var index = tuple == default ? -1 : tuple.i;
+
+        if (index < 0)
+        {
+            isError = true;
+            message = "Failed to locate reservation to save.";
+            return;
+        }
+
+        // update and persist via indexer
+        PassengerSeat updated = new PassengerSeat
+        {
+            Id = selected.Id,
+            FlightId = selected.FlightId,
+            Name = editName!,
+            SeatNumber = editSeatNumber!,
+            Age = selected.Age,
+            Gender = selected.Gender
+        };
+
+        PassengerService[index] = updated;
+
+        // reflect changes in UI
+        selected = updated;
+        editMode = false;
+        isError = false;
+        message = "Reservation updated.";
+    }
+
+    // Helper: remove by index from custom ArrayList-like service
+    private void RemoveAt(int i)
+    {
+        // kept for compatibility but now service exposes RemoveAt
+        PassengerService.RemoveAt(i);
+    }
+}
