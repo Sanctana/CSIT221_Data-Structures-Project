@@ -1,24 +1,49 @@
-using System.Collections.Generic;
 using Models;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Services
-{
-    public class AirportService
+namespace Services;
+
+public class AirportService
+
+    private readonly List<Airport> _airports = new();
+
+    public void Initialize(IEnumerable<Airport>? airports)
     {
-        private readonly List<Airport> _airports = new()
-        {
-            new Airport("LAX", "Los Angeles", "USA"),
-            new Airport("JFK", "New York", "USA"),
-            new Airport("SFO", "San Francisco", "USA"),
-            new Airport("ORD", "Chicago", "USA"),
-            new Airport("MNL", "Manila", "Philippines"),
-            new Airport("CEB", "Cebu", "Philippines"),
-            new Airport("DXB", "Dubai", "UAE"),
-            new Airport("NRT", "Tokyo Narita", "Japan"),
-            new Airport("HND", "Tokyo Haneda", "Japan"),
-            new Airport("ICN", "Seoul Incheon", "South Korea")
-        };
+        _airports.Clear();
 
-        public IEnumerable<Airport> GetAllAirports() => _airports;
+        if (airports != null)
+            _airports.AddRange(airports);
+    }
+
+    public IEnumerable<Airport> GetAllAirports() => _airports;
+
+    public IEnumerable<Airport> Search(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return Enumerable.Empty<Airport>();
+
+        input = input.Trim().ToLower();
+
+        return _airports.Where(a =>
+           a.Code.ToLower().Contains(input) ||
+           a.City.ToLower().Contains(input) ||
+           a.Name.ToLower().Contains(input) ||
+           a.Country.ToLower().Contains(input)
+        );
+    }
+
+    public Airport? Find(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return null;
+
+        input = input.Trim().ToLower();
+
+        return _airports.FirstOrDefault(a =>
+            a.Code.ToLower() == input ||
+            a.City.ToLower() == input ||
+            a.Name.ToLower() == input
+        );
     }
 }
