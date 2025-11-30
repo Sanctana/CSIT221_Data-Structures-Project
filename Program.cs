@@ -14,6 +14,11 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddSingleton<FlightService>();
 builder.Services.AddSingleton<SeatService>();
 builder.Services.AddSingleton<PassengerSeatService>();
+builder.Services.AddSingleton<FlightService>();
+builder.Services.AddSingleton<SeatService>();
+builder.Services.AddSingleton<PassengerSeatService>();
+builder.Services.AddSingleton<TicketService>(); 
+
 
 var host = builder.Build();
 
@@ -31,5 +36,6 @@ catch (Exception ex)
 {
     Console.Error.WriteLine($"Startup init failed: {ex}");
 }
+
 
 await host.RunAsync();
