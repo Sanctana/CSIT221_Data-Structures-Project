@@ -1,12 +1,21 @@
 @page "/flight"
 @using Services
 @using Models
+@using Microsoft.AspNetCore.Components
 @inject PassengerSeatService PassengerService
 @inject FlightService FlightService
+@inject NavigationManager Navigation
 
-<h3>Reservation</h3>
+<div class="container mt-3">
+    <div class="mb-4">
+        <button class="btn btn-primary btn-lg" @onclick="GoBack" style="font-weight: bold;">
+            ← Back to Home
+        </button>
+    </div>
 
-<div style="border:1px solid #ccc; padding:1rem; max-width:600px;">
+    <h3>Reservation</h3>
+
+    <div style="border:1px solid #ccc; padding:1rem; max-width:600px;">
     <label>Enter ID/confirmation:</label>
     <input class="form-control" @bind="searchId" placeholder="Passenger Id or Seat Number" />
     <button class="btn btn-primary" @onclick="OnEnter">Enter</button>
@@ -59,6 +68,7 @@
             }
         </div>
     }
+</div>
 </div>
 
 @code {
@@ -221,5 +231,10 @@
     {
         // kept for compatibility but now service exposes RemoveAt
         PassengerService.RemoveAt(i);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
     }
 }
