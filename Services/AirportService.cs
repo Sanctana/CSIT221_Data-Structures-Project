@@ -8,7 +8,7 @@ public class AirportService
 {
     private readonly List<Airport> _airports = new();
 
-    // === FIX: Add Initialize() ===
+    // === Initialize() required by Program.cs ===
     public void Initialize(IEnumerable<Airport>? airports)
     {
         _airports.Clear();
@@ -16,12 +16,15 @@ public class AirportService
             _airports.AddRange(airports);
     }
 
+    // Return all airports
     public IEnumerable<Airport> GetAllAirports() => _airports;
 
+    // Find by IATA code
     public Airport? GetAirportByCode(string code) =>
         _airports.FirstOrDefault(a =>
             a.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
 
+    // Search airport by code, city or country
     public IEnumerable<Airport> Search(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -32,8 +35,7 @@ public class AirportService
         return _airports.Where(a =>
             a.Code.ToLower().Contains(query) ||
             a.City.ToLower().Contains(query) ||
-            a.Country.ToLower().Contains(query) ||
-            a.Name.ToLower().Contains(query)
+            a.Country.ToLower().Contains(query)
         );
     }
 }
