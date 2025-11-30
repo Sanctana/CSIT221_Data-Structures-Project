@@ -1,4 +1,4 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">CSIT221_Data-Structures-Project</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -9,16 +9,23 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column">
+
+        <!-- Home -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+                Home
             </NavLink>
         </div>
+
+        <!-- Tickets (renamed from Add Ticket) -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="addTicket">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Add Ticket
+            <NavLink class="nav-link" href="tickets">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                Tickets
             </NavLink>
         </div>
+
     </nav>
 </div>
 
