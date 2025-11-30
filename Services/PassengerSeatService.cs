@@ -43,12 +43,15 @@ public class PassengerSeatService : IEnumerable<PassengerSeat>
         set => _passengerSeats[index] = value;
     }
 
-    // New helpers used by the UI
     public void RemoveAt(int index) => _passengerSeats.RemoveAt(index);
 
     public List<PassengerSeat> ToList() => new List<PassengerSeat>(_passengerSeats);
 
-    // Returns index of first matching item or -1
     public int IndexOf(Func<PassengerSeat, bool> predicate) =>
         _passengerSeats.FindIndex(ps => predicate(ps));
+}
+
+public void RemoveWhere(Func<PassengerSeat, bool> predicate)
+{
+    _passengerSeats.RemoveAll(ps => predicate(ps));
 }
