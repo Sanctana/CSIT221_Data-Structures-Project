@@ -1,0 +1,44 @@
+[
+  { "code": "MNL", "name": "Ninoy Aquino International Airport", "country": "Philippines", "city": "Manila" },
+  { "code": "CEB", "name": "Mactan–Cebu International Airport", "country": "Philippines", "city": "Cebu" },
+  { "code": "CRK", "name": "Clark International Airport", "country": "Philippines", "city": "Clark" },
+  { "code": "DVO", "name": "Francisco Bangoy International Airport", "country": "Philippines", "city": "Davao" },
+  { "code": "ILO", "name": "Iloilo International Airport", "country": "Philippines", "city": "Iloilo City" },
+  { "code": "KLO", "name": "Kalibo International Airport", "country": "Philippines", "city": "Kalibo" },
+  { "code": "TAG", "name": "Bohol–Panglao International Airport", "country": "Philippines", "city": "Panglao" },
+
+  { "code": "LAX", "name": "Los Angeles International Airport", "country": "USA", "city": "Los Angeles" },
+  { "code": "JFK", "name": "John F. Kennedy International Airport", "country": "USA", "city": "New York" },
+  { "code": "SFO", "name": "San Francisco International Airport", "country": "USA", "city": "San Francisco" },
+  { "code": "SEA", "name": "Seattle–Tacoma International Airport", "country": "USA", "city": "Seattle" },
+  { "code": "ORD", "name": "O'Hare International Airport", "country": "USA", "city": "Chicago" },
+  { "code": "ATL", "name": "Hartsfield–Jackson Atlanta International Airport", "country": "USA", "city": "Atlanta" },
+  { "code": "DFW", "name": "Dallas/Fort Worth International Airport", "country": "USA", "city": "Dallas" },
+  { "code": "MIA", "name": "Miami International Airport", "country": "USA", "city": "Miami" },
+  { "code": "BOS", "name": "Boston Logan International Airport", "country": "USA", "city": "Boston" },
+  { "code": "DEN", "name": "Denver International Airport", "country": "USA", "city": "Denver" },
+
+  { "code": "NRT", "name": "Narita International Airport", "country": "Japan", "city": "Tokyo" },
+  { "code": "HND", "name": "Haneda Airport", "country": "Japan", "city": "Tokyo" },
+  { "code": "KIX", "name": "Kansai International Airport", "country": "Japan", "city": "Osaka" },
+
+  { "code": "ICN", "name": "Incheon International Airport", "country": "South Korea", "city": "Seoul" },
+
+  { "code": "SIN", "name": "Changi Airport", "country": "Singapore", "city": "Singapore" },
+
+  { "code": "HKG", "name": "Hong Kong International Airport", "country": "Hong Kong", "city": "Hong Kong" },
+
+  { "code": "SYD", "name": "Sydney Kingsford Smith Airport", "country": "Australia", "city": "Sydney" },
+  { "code": "MEL", "name": "Melbourne Airport", "country": "Australia", "city": "Melbourne" },
+
+  { "code": "DXB", "name": "Dubai International Airport", "country": "UAE", "city": "Dubai" },
+  { "code": "AUH", "name": "Abu Dhabi International Airport", "country": "UAE", "city": "Abu Dhabi" },
+
+  { "code": "LHR", "name": "London Heathrow Airport", "country": "United Kingdom", "city": "London" },
+  { "code": "LGW", "name": "London Gatwick Airport", "country": "United Kingdom", "city": "London" },
+
+  { "code": "YYZ", "name": "Toronto Pearson International Airport", "country": "Canada", "city": "Toronto" },
+
+  { "code": "PEK", "name": "Beijing Capital International Airport", "country": "China", "city": "Beijing" },
+  { "code": "PVG", "name": "Shanghai Pudong International Airport", "country": "China", "city": "Shanghai" }
+]
