@@ -4,7 +4,7 @@ namespace Services;
 
 public class TicketQueueService
 {
-    private readonly Queue<Ticket> _queue = new();
+    private readonly Utilities.Queue<Ticket> _queue = new();
     private bool _initialized = false;
 
     public void Enqueue(Ticket t)

@@ -1,6 +1,8 @@
+using System.Collections;
+
 namespace Utilities;
 
-public class ArrayList<T>
+public class ArrayList<T> : IEnumerable<T>
 {
     private T[] _items = new T[4];
     private int _count;
@@ -41,6 +43,8 @@ public class ArrayList<T>
         }
     }
 
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     public T this[int index]
     {
         get
@@ -55,6 +59,12 @@ public class ArrayList<T>
                 throw new ArgumentOutOfRangeException(nameof(index));
             _items[index] = value;
         }
+    }
+
+    public void Clear()
+    {
+        _items = new T[4];
+        _count = 0;
     }
 
     public int Count => _count;

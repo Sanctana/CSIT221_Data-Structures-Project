@@ -122,3 +122,15 @@ code {
 .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+
+.flatpickr-day.available-day {
+    background: #28a745 !important; /* green */
+    color: white !important;
+}
+.flatpickr-day.unavailable-day {
+    background: #dc3545 !important; /* red */
+    color: white !important;
+}
+
+/* ...existing code ... */
