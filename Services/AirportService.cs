@@ -8,7 +8,6 @@ public class AirportService
 {
     private readonly List<Airport> _airports = new();
 
-    // === Initialize() required by Program.cs ===
     public void Initialize(IEnumerable<Airport>? airports)
     {
         _airports.Clear();
