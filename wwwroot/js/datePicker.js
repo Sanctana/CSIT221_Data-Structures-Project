@@ -1,13 +1,18 @@
-// ...existing code...
+// ========================
+// CUSTOM DATE PICKER
+// ========================
 window.datePicker = {
     init: function (inputId, availableDates, dotNetRef) {
         const input = document.getElementById(inputId);
         if (!input) return;
 
-        // ensure we have a Set for fast lookup
+        // Detect unlimited mode → all dates available
+        const unlimited = (availableDates === null);
+
+        // Convert dates into fast lookup set
         const availableSet = new Set((availableDates || []).map(d => d));
 
-        // inject minimal styles once
+        // Inject styles once
         if (!document.getElementById('datePicker-styles')) {
             const style = document.createElement('style');
             style.id = 'datePicker-styles';
@@ -25,9 +30,9 @@ window.datePicker = {
             document.head.appendChild(style);
         }
 
-        // popup element
+        // Popup
         let popup = null;
-        let shownMonth = null; // Date (first day of month)
+        let shownMonth = null;
 
         function isoDate(d) {
             const yyyy = d.getFullYear();
@@ -47,12 +52,12 @@ window.datePicker = {
             const prev = document.createElement('button');
             prev.textContent = '<';
             prev.type = 'button';
-            prev.onclick = () => { changeMonth(-1); };
+            prev.onclick = () => changeMonth(-1);
 
             const next = document.createElement('button');
             next.textContent = '>';
             next.type = 'button';
-            next.onclick = () => { changeMonth(1); };
+            next.onclick = () => changeMonth(1);
 
             const title = document.createElement('div');
             title.style.fontWeight = '600';
@@ -82,7 +87,7 @@ window.datePicker = {
 
             document.body.appendChild(popup);
 
-            // click outside to close
+            // Close when clicking outside
             setTimeout(() => {
                 window.addEventListener('click', onWindowClick);
             }, 0);
@@ -99,31 +104,30 @@ window.datePicker = {
             const month = dt.getMonth();
             popup._title.textContent = dt.toLocaleString(undefined, { month: 'long', year: 'numeric' });
 
-            // compute first day shown (start of calendar grid)
             const firstOfMonth = new Date(year, month, 1);
-            const startDay = new Date(firstOfMonth);
-            startDay.setDate(1 - firstOfMonth.getDay()); // go back to Sunday of first week
 
-            // clear grid
+            const startDay = new Date(firstOfMonth);
+            startDay.setDate(1 - firstOfMonth.getDay());
+
             popup._grid.innerHTML = '';
 
             for (let i = 0; i < 42; i++) {
                 const cellDate = new Date(startDay);
                 cellDate.setDate(startDay.getDate() + i);
+
                 const cell = document.createElement('div');
                 cell.className = 'dp-cell';
-                if (cellDate.getMonth() !== month) cell.classList.add('other-month');
+
+                if (cellDate.getMonth() !== month)
+                    cell.classList.add('other-month');
 
                 const iso = isoDate(cellDate);
-                if (availableSet.has(iso)) {
+
+                // NEW LOGIC ↓↓↓
+                if (unlimited || availableSet.has(iso)) {
                     cell.classList.add('available');
                     cell.onclick = () => {
-                        // call .NET and set input
-                        try {
-                            dotNetRef.invokeMethodAsync('SetTravelDate', iso);
-                        } catch (e) {
-                            // ignore
-                        }
+                        try { dotNetRef.invokeMethodAsync('SetTravelDate', iso); } catch {}
                         input.value = iso;
                         hide();
                     };
@@ -131,7 +135,7 @@ window.datePicker = {
                     cell.classList.add('unavailable');
                 }
 
-                cell.textContent = String(cellDate.getDate());
+                cell.textContent = cellDate.getDate();
                 popup._grid.appendChild(cell);
             }
         }
@@ -144,23 +148,23 @@ window.datePicker = {
 
         function show() {
             if (!popup) createPopup();
-            // default shownMonth based on input or today
+
             const currentIso = input.value;
             if (currentIso) {
                 const parts = currentIso.split('-').map(x => parseInt(x, 10));
-                if (parts.length === 3) shownMonth = new Date(parts[0], parts[1] - 1, 1);
+                shownMonth = new Date(parts[0], parts[1] - 1, 1);
             } else {
                 shownMonth = new Date();
             }
+
             render();
             popup.style.display = 'block';
         }
 
         function hide() {
-            if (popup) {
-                popup.style.display = 'none';
-                window.removeEventListener('click', onWindowClick);
-            }
+            if (!popup) return;
+            popup.style.display = 'none';
+            window.removeEventListener('click', onWindowClick);
         }
 
         function onWindowClick(e) {
@@ -170,11 +174,9 @@ window.datePicker = {
             hide();
         }
 
-        // show on focus / click
         input.addEventListener('focus', show);
         input.addEventListener('click', show);
 
-        // clean up when element removed
         const observer = new MutationObserver(() => {
             if (!document.body.contains(input)) {
                 hide();
