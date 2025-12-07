@@ -339,14 +339,18 @@
         passengers < 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender)
     {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("datePicker.init", "travelDatePicker",
-                Array.Empty<string>(),
-                DotNetObjectReference.Create(this));
-        }
+        // null = no restrictions → ALL dates enabled
+        await JS.InvokeVoidAsync(
+            "datePicker.init",
+            "travelDatePicker",
+            null,
+            DotNetObjectReference.Create(this)
+        );
     }
+}
 
     [JSInvokable]
     public void SetTravelDate(string isoDate)
@@ -559,3 +563,4 @@
     }
 
 }
+
