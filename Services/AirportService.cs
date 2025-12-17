@@ -15,15 +15,12 @@ public class AirportService
             _airports.AddRange(airports);
     }
 
-    // Return all airports
     public IEnumerable<Airport> GetAllAirports() => _airports;
 
-    // Find by IATA code
     public Airport? GetAirportByCode(string code) =>
         _airports.FirstOrDefault(a =>
             a.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
 
-    // Search airport by code, city or country
     public IEnumerable<Airport> Search(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
